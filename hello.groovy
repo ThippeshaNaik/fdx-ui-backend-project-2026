@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "fdx-webapp"
-        IMAGE_TAG  = "1.0"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+        DOCKERHUB_USER = "thippeshanaik"
     }
 
     stages {
@@ -25,14 +26,32 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+                sh '''
+                  docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                '''
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-id',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                      docker login -u $DOCKER_USER -p $DOCKER_PASS
+                      docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                      docker push $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo "Docker image ${IMAGE_NAME}:${IMAGE_TAG} built successfully"
+            echo "Docker image pushed: ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
         }
     }
 }
