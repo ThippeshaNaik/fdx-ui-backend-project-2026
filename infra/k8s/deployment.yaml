@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: fdx-webapp
-        image: thippeshanaik/fdx-webapp:6
+        image: thippeshanaik/fdx-webapp:IMAGE_TAG
         ports:
         - containerPort: 8080
 
